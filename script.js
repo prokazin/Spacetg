@@ -282,46 +282,6 @@ function showNotification(text, type = 'info') {
     }, 3000);
 }
 
-// ОБНОВЛЕНИЕ РЕЙТИНГА
-function updateRating() {
-    const totalValue = gameState.balance + 
-        (gameState.portfolio.USD * gameState.rates.USD) +
-        (gameState.portfolio.EUR * gameState.rates.EUR) +
-        (gameState.portfolio.CNY * gameState.rates.CNY);
-    
-    // Создаем рейтинг
-    const ratings = [
-        { name: "Вы", value: totalValue, current: true }
-    ];
-    
-    // Добавляем демо-игроков
-    for (let i = 1; i <= 9; i++) {
-        ratings.push({
-            name: `Игрок ${i}`,
-            value: 1500 + Math.random() * 10000,
-            current: false
-        });
-    }
-    
-    // Сортируем по убыванию
-    ratings.sort((a, b) => b.value - a.value);
-    
-    // Отображаем
-    const ratingList = document.getElementById('ratingList');
-    ratingList.innerHTML = '';
-    
-    ratings.forEach((player, index) => {
-        const item = document.createElement('div');
-        item.className = `rating-item ${player.current ? 'current' : ''}`;
-        item.innerHTML = `
-            <div class="rating-rank">${index + 1}</div>
-            <div class="rating-name">${player.name}</div>
-            <div class="rating-value">${player.value.toFixed(2)} ₽</div>
-        `;
-        ratingList.appendChild(item);
-    });
-}
-
 // ОБНОВЛЕНИЕ ПОРТФЕЛЯ
 function updatePortfolio() {
     // Обновляем значения в модальном окне
@@ -377,34 +337,13 @@ function closeModal() {
     });
 }
 
-// ОБРАБОТЧИКИ КНОПОК (для рейтинга и портфеля)
-document.addEventListener('DOMContentLoaded', () => {
-    // Кнопка рейтинга
-    document.getElementById('ratingBtn').addEventListener('click', () => {
-        updateRating();
-        document.getElementById('ratingModal').classList.add('show');
-    });
-    
-    // Кнопка портфеля
-    document.getElementById('portfolioBtn').addEventListener('click', () => {
-        updatePortfolio();
-        document.getElementById('portfolioModal').classList.add('show');
-    });
-    
-    // Закрытие модальных окон
-    document.querySelectorAll('.modal-close, .modal-backdrop').forEach(el => {
-        el.addEventListener('click', closeModal);
-    });
-});
-
-// ... весь предыдущий код остается без изменений ...
-
 // ============================================
 // TELEGRAM INTEGRATION
 // ============================================
 
 let tg = null;
 let telegramUser = null;
+const RATING_STORAGE_KEY = 'telegram_currency_ratings';
 
 // Инициализация Telegram
 function initTelegram() {
@@ -425,17 +364,21 @@ function initTelegram() {
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
         const user = tg.initDataUnsafe.user;
         telegramUser = {
-            id: user.id,
+            id: String(user.id),
             username: user.username || `user_${user.id}`,
             firstName: user.first_name || 'Игрок',
             lastName: user.last_name || '',
-            languageCode: user.language_code || 'ru'
+            languageCode: user.language_code || 'ru',
+            photoUrl: user.photo_url || null
         };
         
         console.log('Telegram пользователь:', telegramUser);
         
         // Показываем информацию о пользователе
         showTelegramUserInfo();
+        
+        // Регистрируем пользователя в рейтинге
+        registerUserInRating();
     }
     
     // Настройка темы
@@ -514,10 +457,7 @@ function setupMainButton() {
 function updateTelegramMainButton() {
     if (!tg || !tg.MainButton || !gameState) return;
     
-    const total = gameState.balance + 
-        (gameState.portfolio.USD * gameState.rates.USD) +
-        (gameState.portfolio.EUR * gameState.rates.EUR) +
-        (gameState.portfolio.CNY * gameState.rates.CNY);
+    const total = calculateTotalPortfolioValue();
     
     tg.MainButton.setText(`💰 ${total.toFixed(0)}₽`);
     tg.MainButton.show();
@@ -545,11 +485,6 @@ function setupTelegramEvents() {
     // Изменение темы
     tg.onEvent('themeChanged', applyTelegramTheme);
     
-    // Изменение размера
-    tg.onEvent('viewportChanged', () => {
-        console.log('Размер окна изменен');
-    });
-    
     // Закрытие приложения
     tg.onEvent('close', () => {
         console.log('Приложение закрывается');
@@ -575,17 +510,277 @@ function tgHapticFeedback(type = 'light') {
     }
 }
 
-// Модифицируем функцию торговли для Telegram
+// Расчет общей стоимости портфеля
+function calculateTotalPortfolioValue() {
+    return gameState.balance + 
+        (gameState.portfolio.USD * gameState.rates.USD) +
+        (gameState.portfolio.EUR * gameState.rates.EUR) +
+        (gameState.portfolio.CNY * gameState.rates.CNY);
+}
+
+// ============================================
+// TELEGRAM RATING SYSTEM
+// ============================================
+
+// Регистрация пользователя в рейтинге
+function registerUserInRating() {
+    if (!telegramUser || !gameState) return;
+    
+    const totalValue = calculateTotalPortfolioValue();
+    
+    const userData = {
+        userId: telegramUser.id,
+        username: telegramUser.username,
+        firstName: telegramUser.firstName,
+        lastName: telegramUser.lastName,
+        balance: totalValue,
+        portfolio: { ...gameState.portfolio },
+        rates: { ...gameState.rates },
+        lastUpdate: new Date().toISOString()
+    };
+    
+    // Сохраняем в рейтинг
+    saveUserToRating(userData);
+}
+
+// Сохранение пользователя в рейтинг
+function saveUserToRating(userData) {
+    try {
+        // Получаем текущий рейтинг
+        let ratings = getRatingData();
+        
+        // Ищем пользователя
+        const userIndex = ratings.findIndex(u => u.userId === userData.userId);
+        
+        if (userIndex !== -1) {
+            // Обновляем существующего пользователя
+            ratings[userIndex] = {
+                ...ratings[userIndex],
+                balance: userData.balance,
+                portfolio: userData.portfolio,
+                rates: userData.rates,
+                lastUpdate: userData.lastUpdate
+            };
+        } else {
+            // Добавляем нового пользователя
+            ratings.push(userData);
+        }
+        
+        // Сохраняем обновленный рейтинг
+        saveRatingData(ratings);
+        
+        console.log('Пользователь сохранен в рейтинг:', userData.username);
+        
+    } catch (error) {
+        console.error('Ошибка сохранения в рейтинг:', error);
+    }
+}
+
+// Получение данных рейтинга
+function getRatingData() {
+    try {
+        const data = localStorage.getItem(RATING_STORAGE_KEY);
+        if (!data) return [];
+        
+        return JSON.parse(data);
+        
+    } catch (error) {
+        console.error('Ошибка загрузки рейтинга:', error);
+        return [];
+    }
+}
+
+// Сохранение данных рейтинга
+function saveRatingData(ratings) {
+    try {
+        localStorage.setItem(RATING_STORAGE_KEY, JSON.stringify(ratings));
+    } catch (error) {
+        console.error('Ошибка сохранения рейтинга:', error);
+    }
+}
+
+// Обновление рейтинга при изменении баланса
+function updateTelegramRating() {
+    if (!telegramUser || !gameState) return;
+    
+    const totalValue = calculateTotalPortfolioValue();
+    
+    const userData = {
+        userId: telegramUser.id,
+        username: telegramUser.username,
+        firstName: telegramUser.firstName,
+        lastName: telegramUser.lastName,
+        balance: totalValue,
+        portfolio: { ...gameState.portfolio },
+        rates: { ...gameState.rates },
+        lastUpdate: new Date().toISOString()
+    };
+    
+    // Сохраняем обновленные данные
+    saveUserToRating(userData);
+    
+    // Обновляем отображение если открыто окно рейтинга
+    if (document.getElementById('ratingModal').classList.contains('show')) {
+        updateRatingDisplay();
+    }
+}
+
+// Обновление статистики рейтинга
+function updateRatingStats() {
+    const ratings = getRatingData();
+    
+    document.getElementById('totalPlayers').textContent = ratings.length;
+    
+    if (telegramUser && ratings.length > 0) {
+        const sortedRatings = [...ratings].sort((a, b) => b.balance - a.balance);
+        const userPosition = sortedRatings.findIndex(u => u.userId === telegramUser.id) + 1;
+        document.getElementById('yourPosition').textContent = userPosition > 0 ? `#${userPosition}` : '-';
+    } else {
+        document.getElementById('yourPosition').textContent = '-';
+    }
+    
+    if (ratings.length > 0) {
+        const topBalance = Math.max(...ratings.map(u => u.balance));
+        document.getElementById('topBalance').textContent = `${topBalance.toFixed(0)}₽`;
+    } else {
+        document.getElementById('topBalance').textContent = '0';
+    }
+}
+
+// Обновление отображения рейтинга
+function updateRatingDisplay() {
+    const ratings = getRatingData();
+    
+    // Обновляем статистику
+    updateRatingStats();
+    
+    const ratingList = document.getElementById('ratingList');
+    if (!ratingList) return;
+    
+    ratingList.innerHTML = '';
+    
+    if (ratings.length === 0) {
+        ratingList.innerHTML = `
+            <div class="no-rating">
+                <i class="fas fa-users" style="font-size: 3rem; color: rgba(255, 255, 255, 0.5); margin-bottom: 20px;"></i>
+                <p style="color: rgba(255, 255, 255, 0.7); text-align: center;">
+                    Пока никто не играл. Будьте первым!
+                </p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Сортируем по балансу (по убыванию)
+    const sortedRatings = [...ratings].sort((a, b) => b.balance - a.balance);
+    
+    // Находим позицию текущего пользователя
+    const currentUserIndex = sortedRatings.findIndex(u => u.userId === telegramUser?.id);
+    
+    // Показываем топ-20 и текущего пользователя если он не в топе
+    const showCount = 20;
+    let usersToShow = sortedRatings.slice(0, showCount);
+    
+    // Добавляем текущего пользователя если его нет в топе
+    if (currentUserIndex >= showCount && telegramUser) {
+        usersToShow.push(sortedRatings[currentUserIndex]);
+    }
+    
+    // Отображаем пользователей
+    usersToShow.forEach((user, index) => {
+        const isCurrentUser = user.userId === telegramUser?.id;
+        const actualPosition = sortedRatings.findIndex(u => u.userId === user.userId) + 1;
+        
+        // Определяем иконку для позиции
+        let rankIcon = 'fas fa-hashtag';
+        if (actualPosition === 1) rankIcon = 'fas fa-crown';
+        else if (actualPosition === 2) rankIcon = 'fas fa-medal';
+        else if (actualPosition === 3) rankIcon = 'fas fa-award';
+        
+        const item = document.createElement('div');
+        item.className = `rating-item ${isCurrentUser ? 'current' : ''}`;
+        
+        item.innerHTML = `
+            <div class="rating-rank">
+                <i class="${rankIcon}"></i>
+                <span style="font-size: 0.9rem; margin-left: 3px;">${actualPosition}</span>
+            </div>
+            <div class="rating-user-info">
+                <div class="rating-name">${user.firstName} ${user.lastName || ''}</div>
+                <div class="rating-username">@${user.username}</div>
+            </div>
+            <div class="rating-value">${user.balance.toFixed(2)} ₽</div>
+        `;
+        
+        ratingList.appendChild(item);
+    });
+    
+    // Добавляем информацию о позиции если пользователь не в топе
+    if (currentUserIndex >= showCount && telegramUser) {
+        const positionInfo = document.createElement('div');
+        positionInfo.className = 'rating-position-info';
+        positionInfo.style.cssText = `
+            text-align: center;
+            padding: 15px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 10px;
+        `;
+        positionInfo.innerHTML = `
+            <i class="fas fa-arrow-down"></i>
+            Ваша позиция: <strong>${currentUserIndex + 1}</strong> из ${sortedRatings.length}
+            <i class="fas fa-arrow-down"></i>
+        `;
+        ratingList.appendChild(positionInfo);
+    }
+}
+
+// Обновляем функцию рейтинга для Telegram
+window.updateRating = function() {
+    if (telegramUser) {
+        // Используем Telegram рейтинг
+        updateTelegramRating();
+        updateRatingDisplay();
+    } else {
+        // Старый рейтинг для браузера
+        const totalValue = calculateTotalPortfolioValue();
+        
+        const ratings = [
+            { name: "Вы", value: totalValue, current: true }
+        ];
+        
+        const ratingList = document.getElementById('ratingList');
+        if (ratingList) {
+            ratingList.innerHTML = '';
+            ratings.forEach((player, index) => {
+                const item = document.createElement('div');
+                item.className = `rating-item ${player.current ? 'current' : ''}`;
+                item.innerHTML = `
+                    <div class="rating-rank">${index + 1}</div>
+                    <div class="rating-name">${player.name}</div>
+                    <div class="rating-value">${player.value.toFixed(2)} ₽</div>
+                `;
+                ratingList.appendChild(item);
+            });
+        }
+    }
+};
+
+// Модифицируем tradeCurrency для обновления рейтинга
 const originalTradeCurrency = window.tradeCurrency;
 window.tradeCurrency = function(currency, action) {
     // Вызываем оригинальную функцию
     const result = originalTradeCurrency(currency, action);
     
+    // Обновляем рейтинг Telegram если пользователь авторизован
+    if (telegramUser) {
+        updateTelegramRating();
+    }
+    
     // Виброотклик в Telegram
     if (tg) {
         tgHapticFeedback('light');
-        
-        // Обновляем кнопку Telegram
         updateTelegramMainButton();
     }
     
@@ -600,6 +795,11 @@ window.updateDisplay = function() {
     // Обновляем кнопку Telegram
     if (tg) {
         updateTelegramMainButton();
+    }
+    
+    // Обновляем рейтинг если нужно
+    if (telegramUser) {
+        updateTelegramRating();
     }
 };
 
@@ -616,7 +816,27 @@ window.closeModal = function() {
     }
 };
 
-// Экспортируем функции для глобального доступа
+// Обработчики кнопок
+document.addEventListener('DOMContentLoaded', () => {
+    // Кнопка рейтинга
+    document.getElementById('ratingBtn').addEventListener('click', () => {
+        updateRating();
+        document.getElementById('ratingModal').classList.add('show');
+    });
+    
+    // Кнопка портфеля
+    document.getElementById('portfolioBtn').addEventListener('click', () => {
+        updatePortfolio();
+        document.getElementById('portfolioModal').classList.add('show');
+    });
+    
+    // Закрытие модальных окон
+    document.querySelectorAll('.modal-close, .modal-backdrop').forEach(el => {
+        el.addEventListener('click', closeModal);
+    });
+});
+
+// Экспортируем функции
 window.initTelegram = initTelegram;
 window.tgHapticFeedback = tgHapticFeedback;
 window.telegramUser = telegramUser;
