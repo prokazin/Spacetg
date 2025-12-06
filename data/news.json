@@ -1,0 +1,22 @@
+[
+    {"text": "ЦБ повысил ключевую ставку", "impact": {"USD": 0.03, "EUR": 0.02, "CNY": 0.01}, "type": "positive"},
+    {"text": "Падение цен на нефть", "impact": {"USD": -0.04, "EUR": -0.02, "CNY": -0.01}, "type": "negative"},
+    {"text": "Новые санкции против России", "impact": {"USD": 0.05, "EUR": 0.03, "CNY": 0.02}, "type": "negative"},
+    {"text": "Китай увеличил экспорт", "impact": {"USD": 0.01, "EUR": 0.01, "CNY": -0.03}, "type": "positive"},
+    {"text": "ЕЦБ сохранил ставки", "impact": {"USD": -0.02, "EUR": 0.02, "CNY": 0.01}, "type": "neutral"},
+    {"text": "Рост ВВП США", "impact": {"USD": -0.03, "EUR": 0.01, "CNY": 0.01}, "type": "positive"},
+    {"text": "Инфляция в еврозоне снизилась", "impact": {"USD": 0.01, "EUR": -0.02, "CNY": 0.01}, "type": "positive"},
+    {"text": "Торговые переговоры провалились", "impact": {"USD": 0.04, "EUR": 0.03, "CNY": 0.05}, "type": "negative"},
+    {"text": "Криптовалюты резко выросли", "impact": {"USD": 0.02, "EUR": 0.01, "CNY": 0.01}, "type": "neutral"},
+    {"text": "Доллар укрепился на мировом рынке", "impact": {"USD": -0.04, "EUR": 0.02, "CNY": 0.02}, "type": "positive"},
+    {"text": "Евро ослаб из-за политических рисков", "impact": {"USD": 0.01, "EUR": 0.04, "CNY": 0.01}, "type": "negative"},
+    {"text": "Юань стабилизировался", "impact": {"USD": 0.01, "EUR": 0.01, "CNY": -0.02}, "type": "positive"},
+    {"text": "Золото подорожал на 5%", "impact": {"USD": 0.02, "EUR": 0.02, "CNY": 0.02}, "type": "positive"},
+    {"text": "ФРС готовится к смягчению политики", "impact": {"USD": 0.03, "EUR": 0.01, "CNY": 0.01}, "type": "negative"},
+    {"text": "Банки повысили прогнозы по рублю", "impact": {"USD": -0.03, "EUR": -0.02, "CNY": -0.02}, "type": "positive"},
+    {"text": "Нефть Brent превысила $90", "impact": {"USD": -0.02, "EUR": -0.01, "CNY": -0.01}, "type": "positive"},
+    {"text": "Акции российских компаний упали", "impact": {"USD": 0.03, "EUR": 0.02, "CNY": 0.02}, "type": "negative"},
+    {"text": "Китай снизил ставки по кредитам", "impact": {"USD": 0.01, "EUR": 0.01, "CNY": -0.04}, "type": "positive"},
+    {"text": "Турецкая лира обновила минимум", "impact": {"USD": 0.02, "EUR": 0.02, "CNY": 0.01}, "type": "neutral"},
+    {"text": "Япония вмешалась в курс йены", "impact": {"USD": 0.01, "EUR": 0.01, "CNY": 0.01}, "type": "neutral"}
+]
