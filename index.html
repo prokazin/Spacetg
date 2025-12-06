@@ -65,6 +65,85 @@
             overflow-y: auto;
         }
         
+        /* Стили для рейтинга Telegram */
+        .rating-user-info {
+            flex: 1;
+            margin: 0 15px;
+        }
+        
+        .rating-name {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 2px;
+        }
+        
+        .rating-username {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+            opacity: 0.8;
+        }
+        
+        .rating-rank {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            flex-direction: column;
+        }
+        
+        .rating-rank i {
+            font-size: 0.8rem;
+            margin-bottom: 2px;
+        }
+        
+        .rating-item.current .rating-rank {
+            background: linear-gradient(135deg, #00b09b, #96c93d);
+        }
+        
+        .rating-value {
+            font-weight: 700;
+            color: #34C759;
+            font-size: 1.1rem;
+            min-width: 100px;
+            text-align: right;
+        }
+        
+        .no-rating {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .rating-stats {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+            color: #007AFF;
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.8rem;
+        }
+        
         /* Остальные стили остаются */
         .selected-amount-display {
             width: 100%;
@@ -313,7 +392,30 @@
                 <button class="modal-close" onclick="closeModal()">&times;</button>
             </div>
             <div class="modal-body">
+                <!-- Статистика рейтинга -->
+                <div class="rating-stats" id="ratingStats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalPlayers">0</div>
+                        <div class="stat-label">Игроков</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="yourPosition">-</div>
+                        <div class="stat-label">Ваша позиция</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="topBalance">0</div>
+                        <div class="stat-label">Топ баланс</div>
+                    </div>
+                </div>
+                
+                <!-- Список рейтинга -->
                 <div class="rating-list" id="ratingList"></div>
+                
+                <!-- Информация о рейтинге -->
+                <div style="text-align: center; margin-top: 20px; color: rgba(255, 255, 255, 0.7); font-size: 0.8rem;">
+                    <i class="fas fa-info-circle"></i>
+                    Рейтинг среди реальных игроков Telegram
+                </div>
             </div>
         </div>
     </div>
