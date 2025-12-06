@@ -4,9 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Валютный Трейдер</title>
-  <!-- Telegram Web App SDK -->
+    
+    <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* Telegram стили */
         :root {
@@ -33,39 +36,36 @@
             color: white;
             font-size: 1.2rem;
             z-index: 1000;
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        /* Стили для видео */
-        #bgVideo {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            z-index: -1;
-            opacity: 0.3;
-            display: block;
-            background: #000; /* Фон на случай если видео не загрузится */
+            display: none;
+            border: none;
+            cursor: pointer;
         }
         
-        /* Запасной градиентный фон */
-        .bg-fallback {
+        .tg-user-info {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -2;
-            background: linear-gradient(135deg, 
-                #0f0c29 0%,
-                #302b63 50%,
-                #24243e 100%);
-            opacity: 0.8;
+            top: 10px;
+            right: 60px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            display: none;
+            align-items: center;
+            gap: 5px;
         }
         
-        /* Остальные стили остаются как были */
+        .tg-user-info i {
+            color: #007AFF;
+        }
+        
+        /* Адаптация контейнера для Telegram */
+        .container {
+            padding-top: 50px;
+            height: calc(100vh - 50px);
+            overflow-y: auto;
+        }
+        
+        /* Остальные стили остаются */
         .selected-amount-display {
             width: 100%;
             text-align: center;
@@ -139,6 +139,16 @@
         <source src="./assets/background.MP4" type="video/mp4">
         Ваш браузер не поддерживает видео
     </video>
+
+    <!-- Telegram элементы -->
+    <button class="tg-back-button" id="tgBackBtn" onclick="window.history.back()">
+        <i class="fas fa-arrow-left"></i>
+    </button>
+
+    <div class="tg-user-info" id="tgUserInfo">
+        <i class="fas fa-user"></i>
+        <span id="tgUserName">Игрок</span>
+    </div>
 
     <!-- Уведомление -->
     <div id="notification" class="notification">
@@ -342,50 +352,17 @@
 
     <script src="script.js"></script>
     <script>
-        // Дополнительный скрипт для гарантированного запуска видео
+        // Telegram инициализация
         document.addEventListener('DOMContentLoaded', function() {
-            const video = document.getElementById('bgVideo');
-            
-            // Пытаемся запустить видео
-            if (video) {
-                video.play().catch(function(error) {
-                    console.log('Автозапуск видео заблокирован, показываем кнопку:', error);
-                    
-                    // Создаем кнопку для ручного запуска
-                    const playButton = document.createElement('button');
-                    playButton.innerHTML = '▶️ Включить фон';
-                    playButton.style.cssText = `
-                        position: fixed;
-                        bottom: 20px;
-                        right: 20px;
-                        padding: 12px 24px;
-                        background: linear-gradient(135deg, #667eea, #764ba2);
-                        color: white;
-                        border: none;
-                        border-radius: 25px;
-                        font-size: 16px;
-                        font-weight: bold;
-                        cursor: pointer;
-                        z-index: 9999;
-                        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-                    `;
-                    
-                    playButton.onclick = function() {
-                        video.play();
-                        playButton.style.display = 'none';
-                    };
-                    
-                    document.body.appendChild(playButton);
-                });
+            // Проверяем, запущено ли в Telegram
+            if (window.Telegram && window.Telegram.WebApp) {
+                initTelegram();
+            } else {
+                // Обычная инициализация
+                setTimeout(() => {
+                    if (window.initGame) window.initGame();
+                }, 100);
             }
-            
-            // Проверяем загрузилось ли видео через 5 секунд
-            setTimeout(function() {
-                if (video && video.readyState < 2) {
-                    console.log('Видео не загрузилось, используем градиентный фон');
-                    video.style.display = 'none';
-                }
-            }, 5000);
         });
     </script>
 </body>
