@@ -8,30 +8,208 @@
     <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
-    <!-- Убрал Taddy SDK — он не используется в коде -->
-    
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Твои стили остаются без изменений -->
     <style>
-        /* ... весь твой <style> блок без изменений ... */
-        #bgVideo {
+        /* Telegram стили */
+        :root {
+            --tg-theme-bg-color: var(--tg-theme-bg-color, #000000);
+            --tg-theme-text-color: var(--tg-theme-text-color, #ffffff);
+            --tg-theme-hint-color: var(--tg-theme-hint-color, #aaaaaa);
+            --tg-theme-link-color: var(--tg-theme-link-color, #007AFF);
+            --tg-theme-button-color: var(--tg-theme-button-color, #007AFF);
+            --tg-theme-button-text-color: var(--tg-theme-button-text-color, #ffffff);
+            --tg-theme-secondary-bg-color: var(--tg-theme-secondary-bg-color, #1c1c1d);
+        }
+        
+        .tg-back-button {
             position: fixed;
-            top: 0;
-            left: 0;
+            top: 10px;
+            left: 10px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            z-index: 1000;
+            display: none;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .tg-user-info {
+            position: fixed;
+            top: 10px;
+            right: 60px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            display: none;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .tg-user-info i {
+            color: #007AFF;
+        }
+        
+        /* Адаптация контейнера для Telegram */
+        .container {
+            padding-top: 50px;
+            height: calc(100vh - 50px);
+            overflow-y: auto;
+        }
+        
+        /* Стили для рейтинга Telegram */
+        .rating-user-info {
+            flex: 1;
+            margin: 0 15px;
+        }
+        
+        .rating-name {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 2px;
+        }
+        
+        .rating-username {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+            opacity: 0.8;
+        }
+        
+        .rating-rank {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            flex-direction: column;
+        }
+        
+        .rating-rank i {
+            font-size: 0.8rem;
+            margin-bottom: 2px;
+        }
+        
+        .rating-item.current .rating-rank {
+            background: linear-gradient(135deg, #00b09b, #96c93d);
+        }
+        
+        .rating-value {
+            font-weight: 700;
+            color: #34C759;
+            font-size: 1.1rem;
+            min-width: 100px;
+            text-align: right;
+        }
+        
+        .no-rating {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .rating-stats {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+            color: #007AFF;
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.8rem;
+        }
+        
+        /* Остальные стили остаются */
+        .selected-amount-display {
             width: 100%;
-            height: 100%;
-            object-fit: cover;
-            z-index: -1;
-            opacity: 0.3;
-            display: block;
-            background: #000;
+            text-align: center;
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .amount-label {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 5px;
+        }
+        
+        .amount-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #007AFF;
+        }
+        
+        .amount-reset {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255, 59, 48, 0.2);
+            border: 1px solid rgba(255, 59, 48, 0.3);
+            color: #FF3B30;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .amount-reset:hover {
+            background: rgba(255, 59, 48, 0.3);
+            transform: rotate(180deg);
+        }
+        
+        .amount-option {
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 70px;
+        }
+        
+        .amount-option:hover {
+            background: rgba(0, 122, 255, 0.2);
+            border-color: rgba(0, 122, 255, 0.5);
         }
     </style>
 </head>
 <body>
-    <!-- Видео с preload="auto" для быстрой загрузки -->
+    <!-- Запасной градиентный фон -->
+    <div class="bg-fallback"></div>
+    
+    <!-- Основное видео с preload="auto" для быстрой загрузки -->
     <video autoplay muted loop playsinline preload="auto" id="bgVideo">
         <source src="https://cdn.jsdelivr.net/gh/prokazin/Space-/assets/background.MP4" type="video/mp4">
         <source src="https://raw.githubusercontent.com/prokazin/Space-/main/assets/background.MP4" type="video/mp4">
@@ -40,13 +218,237 @@
         Ваш браузер не поддерживает видео
     </video>
 
-    <!-- Всё остальное — полностью твой оригинальный HTML -->
-    <!-- Telegram элементы, уведомления, container, карточки валют, модалки и т.д. — без изменений -->
+    <!-- Telegram элементы -->
+    <button class="tg-back-button" id="tgBackBtn" onclick="window.history.back()">
+        <i class="fas fa-arrow-left"></i>
+    </button>
+
+    <div class="tg-user-info" id="tgUserInfo">
+        <i class="fas fa-user"></i>
+        <span id="tgUserName">Игрок</span>
+    </div>
+
+    <!-- Уведомление -->
+    <div id="notification" class="notification">
+        <div class="notification-content">
+            <i class="fas fa-bullhorn"></i>
+            <span id="notificationText">Добро пожаловать в игру!</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Верхняя панель -->
+        <div class="top-bar">
+            <button class="icon-btn" id="ratingBtn">
+                <i class="fas fa-trophy"></i>
+            </button>
+            <div class="balance-info">
+                <div class="balance-amount" id="balanceAmount">1500</div>
+                <div class="balance-label">Баланс в рублях</div>
+            </div>
+            <button class="icon-btn" id="portfolioBtn">
+                <i class="fas fa-wallet"></i>
+            </button>
+        </div>
+
+        <main class="currencies-grid">
+            <!-- USD -->
+            <div class="currency-card ios-style">
+                <div class="currency-content">
+                    <div class="currency-icon">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="currency-name">USD / RUB</div>
+                    <div class="currency-price" id="usdPrice">80.50</div>
+                    <div class="currency-change" id="usdChange">
+                        <span class="change-value">+0.0%</span>
+                        <i class="fas fa-arrow-up change-icon"></i>
+                    </div>
+                    
+                    <div class="selected-amount-display">
+                        <div class="amount-label">Сумма сделки:</div>
+                        <div class="amount-value">
+                            <span class="selected-amount" id="usdSelectedAmount">0</span> ₽
+                        </div>
+                    </div>
+                    
+                    <div class="amount-selector">
+                        <button class="amount-option" onclick="addAmount(1, 'USD')">+1</button>
+                        <button class="amount-option" onclick="addAmount(10, 'USD')">+10</button>
+                        <button class="amount-option" onclick="addAmount(100, 'USD')">+100</button>
+                        <button class="amount-reset" onclick="resetAmount('USD')">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="action-btn sell-btn" onclick="tradeCurrency('USD', 'sell')">
+                            Продать
+                        </button>
+                        <button class="action-btn buy-btn" onclick="tradeCurrency('USD', 'buy')">
+                            Купить
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EUR -->
+            <div class="currency-card ios-style">
+                <div class="currency-content">
+                    <div class="currency-icon">
+                        <i class="fas fa-euro-sign"></i>
+                    </div>
+                    <div class="currency-name">EUR / RUB</div>
+                    <div class="currency-price" id="eurPrice">90.25</div>
+                    <div class="currency-change" id="eurChange">
+                        <span class="change-value">+0.0%</span>
+                        <i class="fas fa-arrow-up change-icon"></i>
+                    </div>
+                    
+                    <div class="selected-amount-display">
+                        <div class="amount-label">Сумма сделки:</div>
+                        <div class="amount-value">
+                            <span class="selected-amount" id="eurSelectedAmount">0</span> ₽
+                        </div>
+                    </div>
+                    
+                    <div class="amount-selector">
+                        <button class="amount-option" onclick="addAmount(1, 'EUR')">+1</button>
+                        <button class="amount-option" onclick="addAmount(10, 'EUR')">+10</button>
+                        <button class="amount-option" onclick="addAmount(100, 'EUR')">+100</button>
+                        <button class="amount-reset" onclick="resetAmount('EUR')">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="action-btn sell-btn" onclick="tradeCurrency('EUR', 'sell')">
+                            Продать
+                        </button>
+                        <button class="action-btn buy-btn" onclick="tradeCurrency('EUR', 'buy')">
+                            Купить
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CNY -->
+            <div class="currency-card ios-style">
+                <div class="currency-content">
+                    <div class="currency-icon">
+                        <i class="fas fa-yen-sign"></i>
+                    </div>
+                    <div class="currency-name">CNY / RUB</div>
+                    <div class="currency-price" id="cnyPrice">11.80</div>
+                    <div class="currency-change" id="cnyChange">
+                        <span class="change-value">+0.0%</span>
+                        <i class="fas fa-arrow-up change-icon"></i>
+                    </div>
+                    
+                    <div class="selected-amount-display">
+                        <div class="amount-label">Сумма сделки:</div>
+                        <div class="amount-value">
+                            <span class="selected-amount" id="cnySelectedAmount">0</span> ₽
+                        </div>
+                    </div>
+                    
+                    <div class="amount-selector">
+                        <button class="amount-option" onclick="addAmount(1, 'CNY')">+1</button>
+                        <button class="amount-option" onclick="addAmount(10, 'CNY')">+10</button>
+                        <button class="amount-option" onclick="addAmount(100, 'CNY')">+100</button>
+                        <button class="amount-reset" onclick="resetAmount('CNY')">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="action-btn sell-btn" onclick="tradeCurrency('CNY', 'sell')">
+                            Продать
+                        </button>
+                        <button class="action-btn buy-btn" onclick="tradeCurrency('CNY', 'buy')">
+                            Купить
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <div class="hint">
+            <i class="fas fa-info-circle"></i>
+            <span>Нажимайте +1, +10, +100 чтобы набрать сумму, затем Купить/Продать</span>
+        </div>
+    </div>
+
+    <!-- Модальное окно рейтинга -->
+    <div id="ratingModal" class="modal">
+        <div class="modal-backdrop" onclick="closeModal()"></div>
+        <div class="modal-container ios-modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-trophy"></i> Рейтинг игроков</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="rating-stats" id="ratingStats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalPlayers">0</div>
+                        <div class="stat-label">Игроков</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="yourPosition">-</div>
+                        <div class="stat-label">Ваша позиция</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="topBalance">0</div>
+                        <div class="stat-label">Топ баланс</div>
+                    </div>
+                </div>
+                
+                <div class="rating-list" id="ratingList"></div>
+                
+                <div style="text-align: center; margin-top: 20px; color: rgba(255, 255, 255, 0.7); font-size: 0.8rem;">
+                    <i class="fas fa-info-circle"></i>
+                    Рейтинг среди реальных игроков Telegram
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно портфеля -->
+    <div id="portfolioModal" class="modal">
+        <div class="modal-backdrop" onclick="closeModal()"></div>
+        <div class="modal-container ios-modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-wallet"></i> Мой портфель</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="portfolio-items">
+                    <div class="portfolio-item">
+                        <span class="currency-name">USD</span>
+                        <span class="currency-amount" id="portfolioUSD">0.00</span>
+                        <span class="currency-value" id="portfolioUSDValue">0 ₽</span>
+                    </div>
+                    <div class="portfolio-item">
+                        <span class="currency-name">EUR</span>
+                        <span class="currency-amount" id="portfolioEUR">0.00</span>
+                        <span class="currency-value" id="portfolioEURValue">0 ₽</span>
+                    </div>
+                    <div class="portfolio-item">
+                        <span class="currency-name">CNY</span>
+                        <span class="currency-amount" id="portfolioCNY">0.00</span>
+                        <span class="currency-value" id="portfolioCNYValue">0 ₽</span>
+                    </div>
+                </div>
+                <div class="portfolio-total">
+                    Общая стоимость: <strong id="portfolioTotal">1500</strong> ₽
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="script.js"></script>
     <script src="telegram-integration.js"></script>
     <script>
-        // Telegram инициализация
         document.addEventListener('DOMContentLoaded', function() {
             if (window.Telegram && window.Telegram.WebApp) {
                 initTelegram();
