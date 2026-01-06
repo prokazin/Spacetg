@@ -6,12 +6,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Токен от @BotFather
-const token = 'ВАШ_ТОКЕН';
-const bot = new TelegramBot(token, { polling: true });
+// Токен из переменной окружения (безопасно для деплоя)
+const token = process.env.BOT_TOKEN || 'ВАШ_ТОКЕН';
 
-// URL вашей игры на GitHub Pages
-const gameUrl = 'https://prokazin.github.io/Space-/';
+const bot = new TelegramBot(token, { polling: false });
+
+// Правильный URL твоего Mini App на Vercel
+const gameUrl = 'https://spacetg.vercel.app';
 
 // Команда /start
 bot.onText(/\/start/, (msg) => {
@@ -78,14 +79,28 @@ bot.setChatMenuButton({
     console.log('Menu Button установлен');
 }).catch(console.error);
 
-// Запуск сервера для вебхуков (опционально)
+// Webhook для обновлений от Telegram
+app.post(`/bot${token}`, (req, res) => {
+    bot.processUpdate(req.body);
+    res.sendStatus(200);
+});
+
+// Опциональный эндпоинт для получения данных из игры
 app.post('/webhook', (req, res) => {
-    // Обработка данных из игры
     console.log('Данные из игры:', req.body);
     res.sendStatus(200);
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log(`Бот запущен на порту ${PORT}`);
+    
+    // Автоматическая установка webhook
+    const webhookUrl = `${process.env.RENDER_EXTERNAL_URL || process.env.VERCEL_URL || 'https://your-domain.com'}/bot${token}`;
+    try {
+        await bot.setWebHook(webhookUrl);
+        console.log(`Webhook установлен: ${webhookUrl}`);
+    } catch (err) {
+        console.error('Ошибка установки webhook:', err);
+    }
 });
